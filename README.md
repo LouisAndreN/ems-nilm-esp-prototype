@@ -1,4 +1,4 @@
-# NILM System & Energy Monitoring
+# Non-Intrusive Load Monitoring System & Energy Monitoring
 
 The goal of this project is to create a monitoring system for home to track energy consumption of home devices such as frdge, induction heater, air conditionner, computers, charging smartphones, lights, ..., to detect anomalies if possible to anticipate maintenance, predict consumption of the household, anticipate devices usage time to predict device usage patterns to avoid tripping the circuit breaker.
 
