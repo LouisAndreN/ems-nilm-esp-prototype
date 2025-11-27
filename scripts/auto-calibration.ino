@@ -4,7 +4,7 @@
 
 /* 
 ESP32 + ADS1115 + SCT-013
-   - Mesure RMS continuously
+   - Measure RMS continuously
    - Interactive calibration via Serial
    - Save calibration factor in NVS (Preferences)
 */
