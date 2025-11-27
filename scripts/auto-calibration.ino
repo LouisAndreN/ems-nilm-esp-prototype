@@ -11,7 +11,7 @@ Tu modifies juste knownPower_W au début.
 
 // ========= CALIBRATION SETTINGS ==========
 float knownPower_W = 60.0f;      
-float mainsVoltage_V = 100.0f;   // Japan = 100V
+float mainsVoltage_V = 100.0f;   // Japan -> 100V
 // ==============================================
 
 Adafruit_ADS1115 ads;
