@@ -92,5 +92,5 @@ V_A1 ≈ 75 mV
 // Signal at A0 through Rpull/Rseries
 V_A0 = 75 mV × 0.091 = 6.8 mV
 // Différentiel A1 - A0
-V_diff = 75 - 6.8 = 68 mV // vs 62 mV = real measure
+V_diff = 75 - 6.8 = 68 mV // vs 62 mV = real measure of electric kettle
 => Ratio = 1.1
