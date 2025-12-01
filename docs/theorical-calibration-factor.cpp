@@ -21,8 +21,8 @@ Z_thevenin = 418k / 51.8k ≈ 8.07 kΩ
 // Path A0 from VREF impedance
 Z_to_A0 = Z_Rpull + (Z_Rseries || Z_C2 || Z_ADC_A0)
 
-// Z_C2 >> Rseries
-// Z_ADC_A0 >> Rseries
+// Z_C2 >> Z_Rseries
+// Z_ADC_A0 >> Z_Rseries
 => Z_to_A0 ≈ Z_Rpull + Z_Rseries = 1000 + 100 = 1100 Ω
 
 // Total impedance seen from SCT
@@ -70,7 +70,7 @@ V_diff = V_A1 - V_A0
 V_diff = 314 mV - 28.6 mV = 285.4 mV RMS
 
 // Capaciter C_VREF in serial with R3 => high-pass filter
-// 50 Hz << fc => low frequency blocked
+// 50 Hz << fc = 339Hz => low frequency blocked
 Z_C_VREF = 31.8 kΩ // 50 Hz
 Z_R1 = 10 kΩ
 
