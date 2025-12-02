@@ -34,6 +34,8 @@ The SCT-013 current sensor connects via a 3.5mm TRRS jack.
 
 # Status
 - Dashboard for visualization in progress
+- Individual device signatures recording for classification library in progress
+- Consideration of PCM1808 to get more harmonics for advanced devices and use of Machine Learning Model for prediction and anomaly detection
 
 ## Future features
 
