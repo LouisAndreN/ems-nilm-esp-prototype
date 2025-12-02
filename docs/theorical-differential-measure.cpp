@@ -13,10 +13,10 @@ Z_ADC_A1 ≈ 1-10 MΩ
 Z_VREF_to_GND = sqrt(Z_R2^2 + Z_C_VREF^2) = 33.3 kΩ
 
 // Thevenin impedance at VREF
-Z_th = Z_R1 || Z_VREF_to_GND
-Z_th = 10k || 33.3k
-Z_th = (10k × 33.3k) / (10k + 33.3k)
-Z_th = 333k / 43.3k ≈ 7.7 kΩ
+Z_th_VREF = Z_R1 || Z_VREF_to_GND
+Z_th_VREF = 10k || 33.3k
+Z_th_VREF = (10k × 33.3k) / (10k + 33.3k)
+Z_th_VREF = 333k / 43.3k ≈ 7.7 kΩ
 
 // Path A0 from VREF impedance
 Z_to_A0 = Z_Rpull + (Z_Rseries || Z_C2 || Z_ADC_A0)
