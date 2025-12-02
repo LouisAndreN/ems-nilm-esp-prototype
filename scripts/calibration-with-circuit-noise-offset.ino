@@ -26,7 +26,7 @@ float measure_vrms(int samples);
 float measure_irms();
 void autoCalibration();
 
-unsigned long t0_start;  // temps de début du programme
+unsigned long t0_start;
 
 
 void setup() {
@@ -34,25 +34,23 @@ void setup() {
   delay(500);
   
   Serial.println("\n");
-  Serial.println("╔════════════════════════════════════════╗");
-  Serial.println("║   ESP32 NILM Energy Monitor v1.0      ║");
-  Serial.println("╚════════════════════════════════════════╝");
+  Serial.println("======= ESP32 NILM Energy Monitor v1.0 =======");
   Serial.println();
   
   // Init hardware
   if (!ads.begin()) {
-    Serial.println("❌ ERROR: ADS1115 not found!");
+    Serial.println("ERROR: ADS1115 not found!");
     while (1) delay(1000);
   }
   
   ads.setGain(GAIN_ONE);
   ads.setDataRate(RATE_ADS1115_860SPS);
-  Serial.println("✓ ADS1115 initialized");
+  Serial.println("ADS1115 initialized");
   
   prefs.begin("nilm_config", false);
-  Serial.println("✓ Preferences loaded");
+  Serial.println("Preferences loaded");
   
-  // Vérifier si calibration existe
+  // Check if caibation exists
   if (prefs.isKey("offset") && prefs.isKey("factor")) {
     offsetCurrent = prefs.getFloat("offset", 0);
     calibrationFactor = prefs.getFloat("factor", 0);
@@ -66,7 +64,6 @@ void setup() {
     
     Serial.println("\nRecalibrate? (y/n)");
     
-    // Attendre 5 secondes pour réponse
     unsigned long t0 = millis();
     bool recalibrate = false;
     
@@ -90,48 +87,44 @@ void setup() {
     }
     
   } else {
-    // Pas de calibration, forcer
-    Serial.println("\n⚠️  No calibration found!");
+    Serial.println("\n No calibration found!");
     Serial.println("→ Starting calibration procedure...\n");
     fullCalibration();
   }
   
-  Serial.println("\n╔════════════════════════════════════════╗");
-  Serial.println("║         SYSTEM READY                   ║");
-  Serial.println("║   Monitoring every 1 second...         ║");
-  Serial.println("╚════════════════════════════════════════╝\n");
+  Serial.println("\n =========================================");
+  Serial.println("||         SYSTEM READY                  ||");
+  Serial.println("||          Monitoring ...               ||");
+  Serial.println("===========================================\n");
   
   delay(2000);
 }
 
 void fullCalibration() {
   Serial.println("\n");
-  Serial.println("╔════════════════════════════════════════╗");
-  Serial.println("║      FULL CALIBRATION PROCEDURE        ║");
-  Serial.println("╚════════════════════════════════════════╝");
+  Serial.println("===========================================");
+  Serial.println("||      FULL CALIBRATION PROCEDURE       ||");
+  Serial.println("===========================================");
   
-  // Étape 1 : Offset
   calibrateOffset();
   
   delay(2000);
   
-  // Étape 2 : Factor
   calibrateFactor();
   
-  Serial.println("\n✓ Full calibration complete!\n");
+  Serial.println("\n Full calibration complete!\n");
 }
 
 float measure_irms_corrected() {
-  // 1. Mesure rapide VRMS (200 samples ≈ 0.23 sec)
   float vrms = measure_vrms(SAMPLES_MONITORING);
   
-  // 2. Conversion VRMS → courant brut
+  // Convert VRMS to current
   float I_raw = vrms * calibrationFactor;
   
-  // 3. Correction offset (soustraire bruit)
+  // Correction offset (emove noise)
   float I_corrected = I_raw - offsetCurrent;
   
-  // 4. Threshold (ignorer bruit résiduel <50 mA)
+  // Threshold (ignoreresidual noise)
   if (I_corrected < NOISE_THRESHOLD_A) {
     I_corrected = 0;
   }
@@ -147,17 +140,16 @@ void calibrateOffset() {
   Serial.println("        (Keep SCT clipped on wire)");
   Serial.println("\nPress ENTER when ready...");
   
-  // Attendre confirmation utilisateur
   while (!Serial.available()) delay(100);
   while (Serial.available()) Serial.read();  // Clear buffer
   
-  Serial.println("\nMeasuring offset (10 samples)...");
+  Serial.println("\nMeasuring offset ...");
   
   float sum = 0;
   float values[10];
   
   for (int i = 0; i < 10; i++) {
-    float I = measure_irms_fast();  // Mesure rapide
+    float I = measure_irms_fast();
     values[i] = I;
     sum += I;
     
@@ -170,10 +162,10 @@ void calibrateOffset() {
     delay(1000);
   }
   
-  // Moyenne
+  // Mean
   offsetCurrent = sum / 10.0;
   
-  // Écart-type (optionnel, pour info)
+  // Standard deviation
   float variance = 0;
   for (int i = 0; i < 10; i++) {
     float diff = values[i] - offsetCurrent;
@@ -187,7 +179,7 @@ void calibrateOffset() {
   Serial.print(stddev * 1000, 1);
   Serial.println(" mA");
   
-  // Sauvegarder en mémoire persistante
+  // Save in memory
   prefs.putFloat("offset", offsetCurrent);
   
   Serial.println(">>> Offset saved to memory");
@@ -205,14 +197,13 @@ void calibrateFactor() {
   Serial.println("        Turn ON the load");
   Serial.println("\nPress ENTER when load is running...");
   
-  // Attendre confirmation
   while (!Serial.available()) delay(100);
   while (Serial.available()) Serial.read();
   
   Serial.println("\nWait 5 seconds for stabilization...");
   delay(5000);
   
-  Serial.println("Measuring factor (5 samples, 1 sec each)...");
+  Serial.println("Measuring factor...");
   
   float I_known = knownPower_P / mainsVoltage_V;
   const int NUM_SAMPLES = 5;
@@ -220,10 +211,10 @@ void calibrateFactor() {
   float sum = 0;
   
   for (int i = 0; i < NUM_SAMPLES; i++) {
-    // Mesure VRMS précise (860 samples = 1 sec)
+    // Measure VRMS
     float vrms = measure_vrms(SAMPLES_CALIBRATION);
     
-    // Calcul facteur
+    // Calculate facor
     float factor = I_known / vrms;
     factors[i] = factor;
     sum += factor;
@@ -235,13 +226,13 @@ void calibrateFactor() {
     Serial.print(" mV → factor = ");
     Serial.println(factor, 2);
     
-    delay(2000);  // Pause entre mesures
+    delay(2000);  // Between two measures
   }
   
-  // Moyenne
+  // Mean
   calibrationFactor = sum / NUM_SAMPLES;
   
-  // Écart-type
+  // Standard deviation
   float variance = 0;
   for (int i = 0; i < NUM_SAMPLES; i++) {
     float diff = factors[i] - calibrationFactor;
@@ -249,7 +240,6 @@ void calibrateFactor() {
   }
   float stddev = sqrt(variance / NUM_SAMPLES);
   
-  // Coefficient variation (%)
   float cv_percent = (stddev / calibrationFactor) * 100;
   
   Serial.print("\n>>> Calibration Factor: ");
@@ -260,15 +250,7 @@ void calibrateFactor() {
   Serial.print(cv_percent, 1);
   Serial.println("%)");
   
-  // Validation qualité
-  if (cv_percent > 5.0) {
-    Serial.println("⚠️  WARNING: High variation (>5%)");
-    Serial.println("    Check load stability, try again");
-  } else {
-    Serial.println("✓  Good calibration (variation <5%)");
-  }
-  
-  // Sauvegarder
+  // Save in memory
   prefs.putFloat("factor", calibrationFactor);
   
   Serial.println(">>> Factor saved to memory");
@@ -276,10 +258,10 @@ void calibrateFactor() {
 }
 
 float measure_irms_with_time(unsigned long &time_ms) {
-    unsigned long t_start = millis();   // début mesure
+    unsigned long t_start = millis();   // start measure
     float irms = measure_irms();
-    unsigned long t_end = millis();     // fin mesure
-    time_ms = ((t_start + t_end) / 2) - t0_start;  // temps relatif depuis début
+    unsigned long t_end = millis();     // end mesure
+    time_ms = ((t_start + t_end) / 2) - t0_start;  // relative time
     return irms;
 }
 
@@ -287,14 +269,14 @@ void loop() {
   static unsigned long lastMillis = 0;
   unsigned long currentMillis = millis();
   
-  // Update toutes les 1 seconde
+  // Update
   if (currentMillis - lastMillis >= 1000) {
     
-    // Mesure corrigée (offset + threshold)
+    // Corrected measure (offset + threshold)
     float I = measure_irms_corrected();
     float P = I * mainsVoltage_V;
     
-    // Affichage
+    // Plot
     if (I > 0) {
       Serial.print("I = ");
       Serial.print(I, 2);
@@ -310,7 +292,7 @@ void loop() {
 }
 
 
-// ---- RMS CALC ----
+// ---- VRMS ----
 float measure_vrms(int samples) {
   double sumsq = 0;
   for (int i = 0; i < samples; i++) {
@@ -351,7 +333,7 @@ void autoCalibration() {
 
   calibrationFactor = knownCurrent_I / vrms;
 
-  // Sauvegarde quand même dans NVS si tu veux réutiliser
+  // Save in NVS to reuse
   prefs.putFloat(PREF_KEY, calibrationFactor);
 
   Serial.print("New calibration factor = ");
