@@ -155,7 +155,7 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🔌 Connect", use_container_width=True):
+        if st.button("🔌 Connect", width='stretch'):
             if selected_port:
                 if st.session_state.ser:
                     try:
@@ -174,7 +174,7 @@ with st.sidebar:
                     st.error("Failed")
     
     with col2:
-        if st.button("🔌 Disconnect", use_container_width=True):
+        if st.button("🔌 Disconnect", width='stretch'):
             if st.session_state.ser:
                 try:
                     st.session_state.ser.close()
@@ -226,7 +226,7 @@ with st.sidebar:
     
     col_n1, col_n2 = st.columns([3, 1])
     with col_n1:
-        if st.button("📊 Measure noise", use_container_width=True,
+        if st.button("📊 Measure noise", width='stretch',
                      disabled=not (st.session_state.serial_connected and 
                                   st.session_state.calibration_state in ['idle', 'ready'])):
             st.session_state.calibration_state = 'noise'
@@ -235,7 +235,7 @@ with st.sidebar:
             st.session_state.calibration_timeout = time.time()
             st.rerun()
     with col_n2:
-        if st.button("❌", use_container_width=True,
+        if st.button("❌", width='stretch',
                      disabled=st.session_state.calibration_state != 'noise'):
             st.session_state.calibration_state = 'idle'
             st.session_state.calibration_samples = []
@@ -249,7 +249,7 @@ with st.sidebar:
     
     col_r1, col_r2 = st.columns([3, 1])
     with col_r1:
-        if st.button("⚡ Measure reference", use_container_width=True,
+        if st.button("⚡ Measure reference", width='stretch',
                      disabled=not (st.session_state.serial_connected and
                                   st.session_state.noise_fft is not None and
                                   st.session_state.calibration_state == 'idle')):
@@ -258,7 +258,7 @@ with st.sidebar:
             st.session_state.calibration_timeout = time.time()
             st.rerun()
     with col_r2:
-        if st.button("✖️", use_container_width=True,
+        if st.button("✖️", width='stretch',
                      disabled=st.session_state.calibration_state != 'reference'):
             st.session_state.calibration_state = 'idle'
             st.session_state.calibration_samples = []
@@ -266,7 +266,7 @@ with st.sidebar:
     
     # Step 3: Start
     st.write("**Step 3:** Start monitoring")
-    if st.button("🚀 Start System", use_container_width=True,
+    if st.button("🚀 Start System", width='stretch',
                  disabled=st.session_state.calibration_state != 'ready'):
         st.session_state.calibration_state = 'running'
         st.rerun()
@@ -274,7 +274,7 @@ with st.sidebar:
     # Controls
     col_s1, col_s2 = st.columns(2)
     with col_s1:
-        if st.button("🔄 Reset", use_container_width=True):
+        if st.button("🔄 Reset", width='stretch'):
             st.session_state.calibration_state = 'idle'
             st.session_state.noise_fft = None
             st.session_state.calibration_samples = []
@@ -282,7 +282,7 @@ with st.sidebar:
             st.rerun()
     
     with col_s2:
-        if st.button("⏸️ Stop", use_container_width=True,
+        if st.button("⏸️ Stop", width='stretch',
                      disabled=st.session_state.calibration_state != 'running'):
             st.session_state.calibration_state = 'ready'
             st.rerun()
@@ -325,15 +325,21 @@ if st.session_state.serial_connected and st.session_state.ser:
             
     try:
         lines_read = 0
-        max_lines = 50  # Increased to read more lines per cycle
+        max_lines = 20  # Increased to read more lines per cycle
         
         while st.session_state.ser.in_waiting > 0 and lines_read < max_lines:
-            line = st.session_state.ser.readline().decode('utf-8', errors='ignore').strip()
+            # line = st.session_state.ser.readline().decode('utf-8', errors='ignore').strip()
+            try:
+                line = st.session_state.ser.readline().decode('utf-8', errors='ignore').strip()
+            except:
+                continue
             lines_read += 1
             st.session_state.debug_lines_received += 1
             st.session_state.debug_last_line = line
             
             if line:
+                if len(line) < 5:
+                    continue
                 data = parse_json_data(line)
                 
                 if data:
@@ -341,7 +347,14 @@ if st.session_state.serial_connected and st.session_state.ser:
                     
                     # Check if FFT data exists
                     if 'fft' in data and isinstance(data['fft'], list) and len(data['fft']) > 0:
-                        fft_data = np.array(data['fft'])
+                        # fft_data = np.array(data['fft'])
+
+                        fft_raw = data.get('fft')
+
+                        if not isinstance(fft_raw, list) or len(fft_raw) == 0:
+                            continue
+
+                        fft_data = np.array(fft_raw)
                         
                         # ===== CALIBRATION PROCESSING =====
                         if st.session_state.calibration_state == 'noise':
@@ -512,7 +525,7 @@ if st.session_state.calibration_state in ['ready', 'running']:
                 hovermode='x'
             )
             
-            st.plotly_chart(fig_fft, use_container_width=True)
+            st.plotly_chart(fig_fft, width='stretch')
             
             st.subheader("Harmonics Detail")
             col_z1, col_z2 = st.columns(2)
@@ -544,7 +557,7 @@ if st.session_state.calibration_state in ['ready', 'running']:
                     template="plotly_white"
                 )
                 
-                st.plotly_chart(fig_low, use_container_width=True)
+                st.plotly_chart(fig_low, width='stretch')
             
             with col_z2:
                 fig_high = go.Figure()
@@ -574,7 +587,7 @@ if st.session_state.calibration_state in ['ready', 'running']:
                         template="plotly_white"
                     )
                     
-                    st.plotly_chart(fig_high, use_container_width=True)
+                    st.plotly_chart(fig_high, width='stretch')
         else:
             st.info("Waiting for FFT data...")
 
@@ -606,14 +619,14 @@ if st.session_state.calibration_state in ['ready', 'running']:
                     title="Power (W)", xaxis_title="Time (s)", yaxis_title="Power (W)",
                     height=400, template="plotly_white"
                 )
-                st.plotly_chart(fig_power, use_container_width=True)
+                st.plotly_chart(fig_power, width='stretch')
             
             with col_p2:
                 fig_current = px.line(df, x='time_sec', y='i_rms', title='Current (A)',
                                      labels={'time_sec': 'Time (s)', 'i_rms': 'Current (A)'})
                 fig_current.update_traces(line_color='#ff7f0e', line_width=2)
                 fig_current.update_layout(height=400, template="plotly_white")
-                st.plotly_chart(fig_current, use_container_width=True)
+                st.plotly_chart(fig_current, width='stretch')
 
     # TAB 3: TIME SERIES
     with tab3:
@@ -629,14 +642,14 @@ if st.session_state.calibration_state in ['ready', 'running']:
                                   labels={'time_sec': 'Time (s)', 'v_rms': 'V_RMS (V)'})
                 fig_vrms.update_traces(line_color='#2ca02c', line_width=2)
                 fig_vrms.update_layout(height=350, template="plotly_white")
-                st.plotly_chart(fig_vrms, use_container_width=True)
+                st.plotly_chart(fig_vrms, width='stretch')
             
             with col_t2:
                 fig_thd = px.line(df, x='time_sec', y='thd', title='THD',
                                  labels={'time_sec': 'Time (s)', 'thd': 'THD'})
                 fig_thd.update_traces(line_color='#d62728', line_width=2)
                 fig_thd.update_layout(height=350, template="plotly_white")
-                st.plotly_chart(fig_thd, use_container_width=True)
+                st.plotly_chart(fig_thd, width='stretch')
 
     # TAB 4: ADVANCED
     with tab4:
@@ -645,19 +658,49 @@ if st.session_state.calibration_state in ['ready', 'running']:
             st.json(st.session_state.latest_metrics)
         
         st.subheader("💾 Export Data")
-        if len(st.session_state.history_metrics) > 0:
-            df_export = pd.DataFrame(list(st.session_state.history_metrics))
-            csv = df_export.to_csv(index=False)
-            st.download_button("⬇️ Download CSV", csv, "nilm_data.csv", "text/csv",
-                             use_container_width=True)
+            # --- Create CSV only once and store it ---
+    if "csv_export" not in st.session_state:
+        st.session_state.csv_export = None
+
+    if len(st.session_state.history_metrics) > 0:
+        df_export = pd.DataFrame(list(st.session_state.history_metrics))
+
+        # Only regenerate CSV if history changed
+        if st.session_state.csv_export is None:
+            st.session_state.csv_export = df_export.to_csv(index=False)
+
+        st.download_button(
+            "⬇️ Download CSV",
+            st.session_state.csv_export,
+            "nilm_data.csv",
+            "text/csv",
+            width='stretch'
+        )
 else:
     st.info("👈 Complete calibration to start monitoring")
 
+# #===== AUTO REFRESH =====
+# if st.session_state.serial_connected:
+#     if st.session_state.calibration_state in ['noise', 'reference']:
+#         time.sleep(0.1) # Rafraîchissement rapide pendant calibration
+#         # st.rerun()
+#     elif st.session_state.calibration_state == 'running':
+#         time.sleep(0.5)
+#     st.rerun()
+
 #===== AUTO REFRESH =====
+# Remplacer les appels directs à st.rerun() par un autorefresh contrôlé
+# pip install streamlit-autorefresh
+from streamlit_autorefresh import st_autorefresh
+
 if st.session_state.serial_connected:
+    # refresh interval en ms
     if st.session_state.calibration_state in ['noise', 'reference']:
-        time.sleep(0.05) # Rafraîchissement rapide pendant calibration
-        st.rerun()
+        interval_ms = 100   # rafraîchissement rapide pendant calibration
     elif st.session_state.calibration_state == 'running':
-        time.sleep(0.5)
-        st.rerun()
+        interval_ms = 500   # rafraîchissement normal
+    else:
+        interval_ms = 1000
+
+    # st_autorefresh renverra le nombre de refresh du widget (on l'ignore ici)
+    st_autorefresh(interval=interval_ms, key="nilm_autorefresh")
