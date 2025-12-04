@@ -33,9 +33,9 @@ See `docs/schematic-circuit.png` for complete circuit.
 The SCT-013 current sensor connects via a 3.5mm TRRS jack.
 The current components allows to get until the 8th harmonics, which can be limited for monitoring more advanced devices such as induction heater, solderer, ...
 
-# Status
-- Dashboard for visualization in progress
-- Individual device signatures recording for classification library in progress
+# Status : 🚧 **In progress**
+- Dashboard for visualization
+- Individual device signatures recording for classification library
 - Consideration of PCM1808 to get more harmonics for advanced devices and use of Machine Learning Model for prediction and anomaly detection
 
 # How to run
